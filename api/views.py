@@ -10,8 +10,9 @@ from superuser import models
 from django.contrib.messages import get_messages
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
-from transformers import pipeline
+# from transformers import pipeline
 import random
+import re
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -51,35 +52,35 @@ def getUserDetails(request):
     return Response(context)
 
 
-# def find_maximum_substring(sentence, words):
-#     max_substring = ''
-#     max_length = 0
-#     for word in words:
-#         substring = longest_common_substring(sentence, word)
-#         if len(substring) > max_length:
-#             max_substring = substring
-#             max_length = len(substring)
-#     return max_substring
+def find_maximum_substring(sentence, words):
+    max_substring = ''
+    max_length = 0
+    for word in words:
+        substring = longest_common_substring(sentence, word)
+        if len(substring) > max_length:
+            max_substring = substring
+            max_length = len(substring)
+    return max_substring
 
 
-# def longest_common_substring(str1, str2):
-#     m = len(str1)
-#     n = len(str2)
-#     lengths = [[0] * (n + 1) for _ in range(m + 1)]
-#     longest_substring_length = 0
-#     ending_index = 0
+def longest_common_substring(str1, str2):
+    m = len(str1)
+    n = len(str2)
+    lengths = [[0] * (n + 1) for _ in range(m + 1)]
+    longest_substring_length = 0
+    ending_index = 0
 
-#     for i in range(1, m + 1):
-#         for j in range(1, n + 1):
-#             if str1[i - 1] == str2[j - 1]:
-#                 lengths[i][j] = lengths[i - 1][j - 1] + 1
-#                 if lengths[i][j] > longest_substring_length:
-#                     longest_substring_length = lengths[i][j]
-#                     ending_index = i - 1
-#             else:
-#                 lengths[i][j] = 0
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if str1[i - 1] == str2[j - 1]:
+                lengths[i][j] = lengths[i - 1][j - 1] + 1
+                if lengths[i][j] > longest_substring_length:
+                    longest_substring_length = lengths[i][j]
+                    ending_index = i - 1
+            else:
+                lengths[i][j] = 0
 
-#     return str1[ending_index - longest_substring_length + 1:ending_index + 1]
+    return str1[ending_index - longest_substring_length + 1:ending_index + 1]
 
 def remove_html_tags(text):
     """Remove html tags from a string"""
@@ -105,31 +106,42 @@ def getResponse(request):
             content = f.read()
             f.close()
             content = remove_html_tags(content)
-            # Load the pre-trained question answering model
-            nlp = pipeline("question-answering")
 
-            # The paragraph you want to extract answers from
-            paragraph = content
+            # # Load the pre-trained question answering model
+            # nlp = pipeline("question-answering")
 
-            # The question you want to find an answer for
-            question = question
+            # # The paragraph you want to extract answers from
+            # paragraph = content
 
-            # Use the model to find the answer
-            result = nlp(question=question, context=paragraph)
-            print(result['score'])
-            if (result['score'] > 0.05):
-                responseText = random.choice(["Sorry I don't understand your query.", "Sorry! We can't find any relatable answers for your query."])
-                return JsonResponse({
-                    'code': 200,
-                    'status': "SUCCESS",
-                    'message': responseText
-                })
+            # # The question you want to find an answer for
+            # question = question
+
+            # # Use the model to find the answer
+            # result = nlp(question=question, context=paragraph)
+
+            # if (result['score'] > 0.05):
+            #     responseText = random.choice(["Sorry I don't understand your query.", "Sorry! We can't find any relatable answers for your query."])
+            #     return JsonResponse({
+            #         'code': 200,
+            #         'status': "SUCCESS",
+            #         'message': responseText
+            #     })
+            # else:
+            #     return JsonResponse({
+            #         'code': 200,
+            #         'status': "SUCCESS",
+            #         'message': result['answer']
+            #     })
+            # best_answers = find_maximum_substring(content, question_words)
+            # print(best_answers)
+            pattern = fr'(.*?({"|".join(re.escape(word) for word in question_words)}).*?\.)'
+            match = re.search(pattern, content, re.DOTALL)
+            if match:
+                sentence = match.group(1)
+                print(sentence)
             else:
-                return JsonResponse({
-                    'code': 200,
-                    'status': "SUCCESS",
-                    'message': result['answer']
-                })
+                print("No matching sentence found.")
+            exit()
     else:
         return JsonResponse({
             'code': 501,
