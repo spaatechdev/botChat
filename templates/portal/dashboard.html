@@ -1,0 +1,45 @@
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="pagetitle">
+    <h1>Dashboard</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'superuser:dashboard' %}">Home</a></li>
+            <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+    </nav>
+</div>
+<!-- End Page Title -->
+
+<section class="section dashboard">
+    <div class="row">
+        {% if messages %}
+        {% for message in messages %}
+        {% if forloop.counter == 1 %}
+        <div class="{{ message.tags }}-message" style="height: 30px;">{{ message }}</div>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+        <!-- Left side columns -->
+        <div class="col-lg-12">
+            <div class="row">Dashboard</div>
+        </div>
+        <!-- End Left side columns -->
+    </div>
+</section>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'highcharts/js/highcharts.js' %}"></script>
+
+<script src="{% static 'highcharts/js/highcharts-more.js' %}"></script>
+<script src="{% static 'highcharts/js/dumbbell.js' %}"></script>
+<script src="{% static 'highcharts/js/lollipop.js' %}"></script>
+
+<script src="{% static 'highcharts/js/exporting.js' %}"></script>
+<script src="{% static 'highcharts/js/export-data.js' %}"></script>
+<script src="{% static 'highcharts/js/accessibility.js' %}"></script>
+
+{% endblock %}

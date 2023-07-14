@@ -1,0 +1,5 @@
+env/
+.idea/
+chatBot/.env
+*/__pycache__/
+*/migrations/
