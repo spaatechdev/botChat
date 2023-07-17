@@ -10,7 +10,7 @@ from superuser import models
 from django.contrib.messages import get_messages
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
-# from transformers import pipeline
+from transformers import pipeline
 import random
 import re
 
@@ -107,41 +107,41 @@ def getResponse(request):
             f.close()
             content = remove_html_tags(content)
 
-            # # Load the pre-trained question answering model
-            # nlp = pipeline("question-answering")
+            # Load the pre-trained question answering model
+            nlp = pipeline("question-answering")
 
-            # # The paragraph you want to extract answers from
-            # paragraph = content
+            # The paragraph you want to extract answers from
+            paragraph = content
 
-            # # The question you want to find an answer for
-            # question = question
+            # The question you want to find an answer for
+            question = question
 
-            # # Use the model to find the answer
-            # result = nlp(question=question, context=paragraph)
+            # Use the model to find the answer
+            result = nlp(question=question, context=paragraph)
 
-            # if (result['score'] > 0.05):
-            #     responseText = random.choice(["Sorry I don't understand your query.", "Sorry! We can't find any relatable answers for your query."])
-            #     return JsonResponse({
-            #         'code': 200,
-            #         'status': "SUCCESS",
-            #         'message': responseText
-            #     })
-            # else:
-            #     return JsonResponse({
-            #         'code': 200,
-            #         'status': "SUCCESS",
-            #         'message': result['answer']
-            #     })
+            if (result['score'] < 0.03):
+                responseText = random.choice(["Sorry I don't understand your query.", "Sorry! We can't find any relatable answers for your query."])
+                return JsonResponse({
+                    'code': 200,
+                    'status': "SUCCESS",
+                    'message': responseText
+                })
+            else:
+                return JsonResponse({
+                    'code': 200,
+                    'status': "SUCCESS",
+                    'message': result['answer']
+                })
             # best_answers = find_maximum_substring(content, question_words)
             # print(best_answers)
-            pattern = fr'(.*?({"|".join(re.escape(word) for word in question_words)}).*?\.)'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                sentence = match.group(1)
-                print(sentence)
-            else:
-                print("No matching sentence found.")
-            exit()
+            # pattern = fr'(.*?({"|".join(re.escape(word) for word in question_words)}).*?\.)'
+            # match = re.search(pattern, content, re.DOTALL)
+            # if match:
+            #     sentence = match.group(1)
+            #     print(sentence)
+            # else:
+            #     print("No matching sentence found.")
+            # exit()
     else:
         return JsonResponse({
             'code': 501,
