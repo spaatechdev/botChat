@@ -1,5 +1,5 @@
 env/
 .idea/
-chatBot/.env
+# chatBot/.env
 */__pycache__/
 */migrations/
