@@ -92,13 +92,14 @@ def remove_html_tags(text):
 def getResponse(request):
     if request.method == "POST":
         question = request.POST['question']
-        question_words = question.split(" ")
-        result = list(models.QuestionAnswers.objects.filter(question__in=question_words).distinct().values('response', 'category', 'order', 'parent__question', 'parent__response'))
+        result = list(models.QuestionAnswers.objects.filter(question__icontains=question).distinct().values('response', 'category', 'order', 'parent__question', 'parent__response'))
+        # question_words = question.split(" ")
+        # result = list(models.QuestionAnswers.objects.filter(question__in=question_words).distinct().values('response', 'category', 'order', 'parent__question', 'parent__response'))
         if len(result) > 0:
             return JsonResponse({
                 'code': 200,
                 'status': "SUCCESS",
-                'message': result[0]['response']
+                'message': random.choice(result)['response']
             })
         else:
             file_path = "media/serviceTexts.txt"
@@ -120,7 +121,7 @@ def getResponse(request):
             result = nlp(question=question, context=paragraph)
 
             if (result['score'] < 0.03):
-                responseText = random.choice(["Sorry I don't understand your query.", "Sorry! We can't find any relatable answers for your query."])
+                responseText = random.choice(["Sorry I don't understand your query.", "Sorry! I can't find any relatable answers for your query."])
                 return JsonResponse({
                     'code': 200,
                     'status': "SUCCESS",
