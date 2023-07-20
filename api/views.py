@@ -119,7 +119,7 @@ def getResponse(request):
 
             # Use the model to find the answer
             result = nlp(question=question, context=paragraph)
-
+            print(result)
             if (result['score'] < 0.03):
                 responseText = random.choice(["Sorry I don't understand your query.", "Sorry! I can't find any relatable answers for your query."])
                 return JsonResponse({
