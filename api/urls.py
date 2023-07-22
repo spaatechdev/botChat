@@ -5,6 +5,7 @@ from . import views
 
 app_name='api'
 urlpatterns = [
+    path('test-cors/', views.test_cors_view, name='test_cors_view'),
     path('login/', jwt_views.TokenObtainPairView.as_view(), name ='login'),
     path('login/refresh/', jwt_views.TokenRefreshView.as_view(), name ='login_refresh'),
 

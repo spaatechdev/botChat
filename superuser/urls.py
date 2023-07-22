@@ -21,5 +21,6 @@ from . import views
 app_name = 'superuser'
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
-    path('service-texts', views.serviceTexts, name='serviceTexts')
+    path('service-texts', views.serviceTexts, name='serviceTexts'),
+    path('chat', views.chat, name='chat')
 ]

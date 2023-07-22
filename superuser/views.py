@@ -34,3 +34,6 @@ def serviceTexts(request):
         'content' : content
     })
     return render(request, 'portal/serviceTexts.html', context)
+
+def chat(request):
+    return render(request, 'chat.html', context)

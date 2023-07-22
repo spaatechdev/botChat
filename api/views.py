@@ -52,36 +52,6 @@ def getUserDetails(request):
     return Response(context)
 
 
-def find_maximum_substring(sentence, words):
-    max_substring = ''
-    max_length = 0
-    for word in words:
-        substring = longest_common_substring(sentence, word)
-        if len(substring) > max_length:
-            max_substring = substring
-            max_length = len(substring)
-    return max_substring
-
-
-def longest_common_substring(str1, str2):
-    m = len(str1)
-    n = len(str2)
-    lengths = [[0] * (n + 1) for _ in range(m + 1)]
-    longest_substring_length = 0
-    ending_index = 0
-
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if str1[i - 1] == str2[j - 1]:
-                lengths[i][j] = lengths[i - 1][j - 1] + 1
-                if lengths[i][j] > longest_substring_length:
-                    longest_substring_length = lengths[i][j]
-                    ending_index = i - 1
-            else:
-                lengths[i][j] = 0
-
-    return str1[ending_index - longest_substring_length + 1:ending_index + 1]
-
 def remove_html_tags(text):
     """Remove html tags from a string"""
     import re
@@ -92,9 +62,7 @@ def remove_html_tags(text):
 def getResponse(request):
     if request.method == "POST":
         question = request.POST['question']
-        result = list(models.QuestionAnswers.objects.filter(question__icontains=question).distinct().values('response', 'category', 'order', 'parent__question', 'parent__response'))
-        # question_words = question.split(" ")
-        # result = list(models.QuestionAnswers.objects.filter(question__in=question_words).distinct().values('response', 'category', 'order', 'parent__question', 'parent__response'))
+        result = list(models.QuestionAnswers.objects.filter(question__icontains=question).values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
         if len(result) > 0:
             return JsonResponse({
                 'code': 200,
@@ -102,50 +70,71 @@ def getResponse(request):
                 'message': random.choice(result)['response']
             })
         else:
-            file_path = "media/serviceTexts.txt"
-            f = open(file_path)
-            content = f.read()
-            f.close()
-            content = remove_html_tags(content)
+            # Split the search query into individual words
+            search_words = question.split()
 
-            # Load the pre-trained question answering model
-            nlp = pipeline("question-answering")
+            # Filter the objects based on the number of matching words
+            result = []
+            max_match_count = 3
 
-            # The paragraph you want to extract answers from
-            paragraph = content
+            # Loop through all objects and count the matching words
+            for obj in models.QuestionAnswers.objects.all().values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'):
+                obj_words = obj['question'].split()
+                match_count = sum(1 for word in search_words if word in obj_words)
 
-            # The question you want to find an answer for
-            question = question
-
-            # Use the model to find the answer
-            result = nlp(question=question, context=paragraph)
-            print(result)
-            if (result['score'] < 0.03):
-                responseText = random.choice(["Sorry I don't understand your query.", "Sorry! I can't find any relatable answers for your query."])
+                if match_count > max_match_count:
+                    max_match_count = match_count
+                    result = [obj]
+                elif match_count == max_match_count:
+                    result.append(obj)
+            if len(result) > 0:
                 return JsonResponse({
                     'code': 200,
                     'status': "SUCCESS",
-                    'message': responseText
+                    'message': random.choice(result)['response']
                 })
             else:
-                return JsonResponse({
-                    'code': 200,
-                    'status': "SUCCESS",
-                    'message': result['answer']
-                })
-            # best_answers = find_maximum_substring(content, question_words)
-            # print(best_answers)
-            # pattern = fr'(.*?({"|".join(re.escape(word) for word in question_words)}).*?\.)'
-            # match = re.search(pattern, content, re.DOTALL)
-            # if match:
-            #     sentence = match.group(1)
-            #     print(sentence)
-            # else:
-            #     print("No matching sentence found.")
-            # exit()
+                file_path = "media/serviceTexts.txt"
+                f = open(file_path)
+                content = f.read()
+                f.close()
+                content = remove_html_tags(content)
+
+                # Load the pre-trained question answering model
+                nlp = pipeline("question-answering")
+
+                # The paragraph you want to extract answers from
+                paragraph = content
+
+                # The question you want to find an answer for
+                question = question
+
+                # Use the model to find the answer
+                result = nlp(question=question, context=paragraph)
+                print(result)
+                if (result['score'] < 0.03):
+                    responseText = random.choice(["Sorry I don't understand your query.", "Sorry! I can't find any relatable answers for your query."])
+                    return JsonResponse({
+                        'code': 200,
+                        'status': "SUCCESS",
+                        'message': responseText
+                    })
+                else:
+                    return JsonResponse({
+                        'code': 200,
+                        'status': "SUCCESS",
+                        'message': result['answer']
+                    })
     else:
         return JsonResponse({
             'code': 501,
             'status': "ERROR",
             'message': "There should be ajax method."
         })
+    
+    
+def test_cors_view(request):
+    data = {'message': 'CORS test successful!'}
+    response = JsonResponse(data)
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
