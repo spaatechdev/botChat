@@ -72,7 +72,13 @@ def split_by_special_characters_and_space(input_string):
 
 def getResponse(request):
     if request.method == "POST":
-        question = request.POST['question']
+        question = request.POST['question'].strip()
+        pattern = r'^[^a-zA-Z0-9\s]+|[^a-zA-Z0-9\s]+$'
+        # Use re.sub() to replace leading and trailing special characters with an empty string
+        question = re.sub(pattern, '', question)
+        # Remove any remaining leading and trailing whitespaces
+        question = question.strip()
+
         result = list(models.QuestionAnswers.objects.filter(question__icontains=question).values(
             'question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
         if len(result) > 0:
