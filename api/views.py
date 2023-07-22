@@ -80,6 +80,10 @@ def getResponse(request):
         question = question.replace('GL Tech Service', 'GLTS')
         question = question.replace('GLT Service', 'GLTS')
         question = question.replace('GLTech Service', 'GLTS')
+        question = question.replace('GL', 'GLTS')
+        question = question.replace('GLT', 'GLTS')
+        question = question.replace('G L', 'GLTS')
+        question = question.replace('G L T', 'GLTS')
 
         result = list(models.QuestionAnswers.objects.filter(question=question).values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
 
