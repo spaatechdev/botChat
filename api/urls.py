@@ -13,5 +13,5 @@ urlpatterns = [
     path('get-user-details/', views.getUserDetails, name ='get_user_details'),
     path('logout-user/', views.logoutUser, name ='logout_user'),
 
-    path('get-response/', csrf_exempt(views.getResponse), name ='getResponse'),
+    path('get-response/', csrf_exempt(views.getResponse), name ='getResponse')
 ]
