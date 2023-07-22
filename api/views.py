@@ -130,7 +130,7 @@ def getResponse(request):
                             result = [obj]
                         elif obj['match_count'] == max_match_count:
                             result.append(obj)
-                result = sorted(result, key=itemgetter('match_count'))
+                result = sorted(result, key=itemgetter('match_count'), reverse=True)
                 length=len(result)
                 if length > 3:
                     del result[length - 4:]
