@@ -70,6 +70,8 @@ def getResponse(request):
         question = re.sub(pattern, '', question)
         # Remove any remaining leading and trailing whitespaces
         question = question.strip()
+        question = question.replace('Great Lake Technology Service', 'GLTS')
+        question = question.replace('Great Lake Technology Services', 'GLTS')
 
         result = list(models.QuestionAnswers.objects.filter(question=question).values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
 
