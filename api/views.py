@@ -59,6 +59,12 @@ def remove_html_tags(text):
     return re.sub(clean, '', text)
 
 
+def split_by_special_characters_and_space(input_string):
+    input_string = input_string.replace("_", " ").replace("'", "").replace('"', '')
+    splitted = re.findall(r"[\w']+", input_string)
+    return splitted
+
+
 def getResponse(request):
     if request.method == "POST":
         question = request.POST['question']
@@ -71,15 +77,16 @@ def getResponse(request):
             })
         else:
             # Split the search query into individual words
-            search_words = question.split()
-
+            # search_words = question.split()
+            search_words = split_by_special_characters_and_space(question)
             # Filter the objects based on the number of matching words
             result = []
-            max_match_count = 3
+            max_match_count = 2
 
             # Loop through all objects and count the matching words
             for obj in models.QuestionAnswers.objects.all().values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'):
-                obj_words = obj['question'].split()
+                # obj_words = obj['question'].split()
+                obj_words = split_by_special_characters_and_space(obj['question'])
                 match_count = sum(1 for word in search_words if word in obj_words)
 
                 if match_count > max_match_count:
