@@ -14,6 +14,10 @@ from transformers import pipeline
 import random
 import re
 import string
+from django.db.models import Q
+from functools import reduce
+from operator import or_
+from operator import itemgetter
 
 
 @api_view(['POST'])
@@ -70,22 +74,23 @@ def getResponse(request):
         question = re.sub(pattern, '', question)
         # Remove any remaining leading and trailing whitespaces
         question = question.strip()
-        question = question.replace('Great Lake', 'GLTS')
-        question = question.replace('Great Lake Technology Service', 'GLTS')
-        question = question.replace('Great Lake Technology Services', 'GLTS')
-        question = question.replace('Great Lake Tech Service', 'GLTS')
-        question = question.replace('Great Lake Tech Services', 'GLTS')
-        question = question.replace('G L Tech Service', 'GLTS')
-        question = question.replace('G L T Service', 'GLTS')
-        question = question.replace('GL Tech Service', 'GLTS')
-        question = question.replace('GLT Service', 'GLTS')
-        question = question.replace('GLTech Service', 'GLTS')
-        question = question.replace('GL', 'GLTS')
-        question = question.replace('GLT', 'GLTS')
-        question = question.replace('G L', 'GLTS')
-        question = question.replace('G L T', 'GLTS')
+        # question = question.replace('Great Lake', 'GLTS')
+        # question = question.replace('Great Lake Technology Service', 'GLTS')
+        # question = question.replace('Great Lake Technology Services', 'GLTS')
+        # question = question.replace('Great Lake Tech Service', 'GLTS')
+        # question = question.replace('Great Lake Tech Services', 'GLTS')
+        # question = question.replace('G L Tech Service', 'GLTS')
+        # question = question.replace('G L T Service', 'GLTS')
+        # question = question.replace('GL Tech Service', 'GLTS')
+        # question = question.replace('GLT Service', 'GLTS')
+        # question = question.replace('GLTech Service', 'GLTS')
+        # question = question.replace('GL', 'GLTS')
+        # question = question.replace('GLT', 'GLTS')
+        # question = question.replace('G L', 'GLTS')
+        # question = question.replace('G L T', 'GLTS')
+        question = question.lower()
 
-        result = list(models.QuestionAnswers.objects.filter(question=question).values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
+        result = list(models.QuestionAnswers.objects.filter(question__iexact=question).values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
 
         if len(result) > 0:
             return JsonResponse({
@@ -106,22 +111,29 @@ def getResponse(request):
                 # Split the search query into individual words
                 # search_words = question.split()
                 search_words = question.translate(str.maketrans('', '', string.punctuation)).split()
+                q_object = reduce(or_, (Q(question__icontains=word) for word in search_words))
+
                 # Filter the objects based on the number of matching words
                 result = []
                 max_match_count = 2
-
-                # Loop through all objects and count the matching words
-                for obj in models.QuestionAnswers.objects.all().values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'):
+                for obj in models.QuestionAnswers.objects.filter(q_object).values('id', 'question', 'response', 'category', 'order', 'parent__question', 'parent__response'):
                     # obj_words = obj['question'].split()
-                    obj_words = obj['question'].translate(str.maketrans('', '', string.punctuation)).split()
-                    match_count = sum(
-                        1 for word in search_words if word in obj_words)
+                    obj_words = obj['question'].lower().translate(str.maketrans('', '', string.punctuation)).split()
+                    obj['match_count'] = sum(1 for word in search_words if word in obj_words)
+                    # match_count = 0
+                    # for word in search_words:
+                    #     if word in obj_words:
+                    #         match_count += 1
 
-                    if match_count > max_match_count:
-                        max_match_count = match_count
+                    if obj['match_count'] > max_match_count:
+                        max_match_count = obj['match_count']
                         result = [obj]
-                    elif match_count == max_match_count:
+                    elif obj['match_count'] == max_match_count:
                         result.append(obj)
+                result = sorted(result, key=itemgetter('match_count'))
+                length=len(result)
+                if length > 3:
+                    del result[length - 4:]
                 if len(result) > 0:
                     return JsonResponse({
                         'code': 200,
