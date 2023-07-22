@@ -90,7 +90,7 @@ def getResponse(request):
         # question = question.replace('G L T', 'GLTS')
         question = question.lower()
 
-        result = list(models.QuestionAnswers.objects.filter(question__iexact=question).values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
+        result = list(models.QuestionAnswers.objects.filter(question__iexact=question).values('id', 'question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
 
         if len(result) > 0:
             return JsonResponse({
@@ -100,7 +100,7 @@ def getResponse(request):
             })
         else:
             result = list(models.QuestionAnswers.objects.filter(question__icontains=question).values(
-                'question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
+                'id', 'question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
             if len(result) > 0:
                 return JsonResponse({
                     'code': 200,
