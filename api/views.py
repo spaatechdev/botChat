@@ -71,8 +71,8 @@ def getResponse(request):
         # Remove any remaining leading and trailing whitespaces
         question = question.strip()
 
-        result = list(models.QuestionAnswers.objects.filter(question__icontains=question).values(
-            'question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
+        result = list(models.QuestionAnswers.objects.filter(question=question).values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
+
         if len(result) > 0:
             return JsonResponse({
                 'code': 200,
@@ -80,25 +80,8 @@ def getResponse(request):
                 'message': random.choice(result)['response']
             })
         else:
-            # Split the search query into individual words
-            # search_words = question.split()
-            search_words = question.translate(str.maketrans('', '', string.punctuation)).split()
-            # Filter the objects based on the number of matching words
-            result = []
-            max_match_count = 2
-
-            # Loop through all objects and count the matching words
-            for obj in models.QuestionAnswers.objects.all().values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'):
-                # obj_words = obj['question'].split()
-                obj_words = obj['question'].translate(str.maketrans('', '', string.punctuation)).split()
-                match_count = sum(
-                    1 for word in search_words if word in obj_words)
-
-                if match_count > max_match_count:
-                    max_match_count = match_count
-                    result = [obj]
-                elif match_count == max_match_count:
-                    result.append(obj)
+            result = list(models.QuestionAnswers.objects.filter(question__icontains=question).values(
+                'question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
             if len(result) > 0:
                 return JsonResponse({
                     'code': 200,
@@ -106,38 +89,64 @@ def getResponse(request):
                     'message': random.choice(result)['response']
                 })
             else:
-                file_path = "media/serviceTexts.txt"
-                f = open(file_path)
-                content = f.read()
-                f.close()
-                content = remove_html_tags(content)
+                # Split the search query into individual words
+                # search_words = question.split()
+                search_words = question.translate(str.maketrans('', '', string.punctuation)).split()
+                # Filter the objects based on the number of matching words
+                result = []
+                max_match_count = 2
 
-                # Load the pre-trained question answering model
-                nlp = pipeline("question-answering")
+                # Loop through all objects and count the matching words
+                for obj in models.QuestionAnswers.objects.all().values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'):
+                    # obj_words = obj['question'].split()
+                    obj_words = obj['question'].translate(str.maketrans('', '', string.punctuation)).split()
+                    match_count = sum(
+                        1 for word in search_words if word in obj_words)
 
-                # The paragraph you want to extract answers from
-                paragraph = content
-
-                # The question you want to find an answer for
-                question = question
-
-                # Use the model to find the answer
-                result = nlp(question=question, context=paragraph)
-                print(result)
-                if (result['score'] < 0.03):
-                    responseText = random.choice(
-                        ["Sorry I don't understand your query.", "Sorry! I can't find any relatable answers for your query."])
+                    if match_count > max_match_count:
+                        max_match_count = match_count
+                        result = [obj]
+                    elif match_count == max_match_count:
+                        result.append(obj)
+                if len(result) > 0:
                     return JsonResponse({
                         'code': 200,
                         'status': "SUCCESS",
-                        'message': responseText
+                        'message': random.choice(result)['response']
                     })
                 else:
-                    return JsonResponse({
-                        'code': 200,
-                        'status': "SUCCESS",
-                        'message': result['answer']
-                    })
+                    file_path = "media/serviceTexts.txt"
+                    f = open(file_path)
+                    content = f.read()
+                    f.close()
+                    content = remove_html_tags(content)
+
+                    # Load the pre-trained question answering model
+                    nlp = pipeline("question-answering")
+
+                    # The paragraph you want to extract answers from
+                    paragraph = content
+
+                    # The question you want to find an answer for
+                    question = question
+
+                    # Use the model to find the answer
+                    result = nlp(question=question, context=paragraph)
+                    print(result)
+                    if (result['score'] < 0.03):
+                        responseText = random.choice(
+                            ["Sorry I don't understand your query.", "Sorry! I can't find any relatable answers for your query."])
+                        return JsonResponse({
+                            'code': 200,
+                            'status': "SUCCESS",
+                            'message': responseText
+                        })
+                    else:
+                        return JsonResponse({
+                            'code': 200,
+                            'status': "SUCCESS",
+                            'message': result['answer']
+                        })
     else:
         return JsonResponse({
             'code': 501,
