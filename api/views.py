@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from transformers import pipeline
 import random
 import re
+import string
 
 
 @api_view(['POST'])
@@ -61,15 +62,6 @@ def remove_html_tags(text):
     return re.sub(clean, '', text)
 
 
-def split_by_special_characters_and_space(input_string):
-    input_string = input_string.replace("_", " ")
-    input_string = input_string.replace("'", "")
-    input_string = input_string.replace('"', '')
-    input_string = input_string.replace(', ', ' ')
-    splitted = re.findall(r"[\w']+", input_string)
-    return splitted
-
-
 def getResponse(request):
     if request.method == "POST":
         question = request.POST['question'].strip()
@@ -90,7 +82,7 @@ def getResponse(request):
         else:
             # Split the search query into individual words
             # search_words = question.split()
-            search_words = split_by_special_characters_and_space(question)
+            search_words = question.translate(str.maketrans('', '', string.punctuation)).split()
             # Filter the objects based on the number of matching words
             result = []
             max_match_count = 2
@@ -98,8 +90,7 @@ def getResponse(request):
             # Loop through all objects and count the matching words
             for obj in models.QuestionAnswers.objects.all().values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'):
                 # obj_words = obj['question'].split()
-                obj_words = split_by_special_characters_and_space(
-                    obj['question'])
+                obj_words = obj['question'].translate(str.maketrans('', '', string.punctuation)).split()
                 match_count = sum(
                     1 for word in search_words if word in obj_words)
 
