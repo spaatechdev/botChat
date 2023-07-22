@@ -14,6 +14,7 @@ from transformers import pipeline
 import random
 import re
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def loginUser(request):
@@ -48,7 +49,8 @@ def logoutUser(request):
 @permission_classes([IsAuthenticated])
 def getUserDetails(request):
     context = {}
-    context.update({'message': "User Details Fetched Successfully", 'userDetails': {'id': request.user.id, 'email': request.user.email, 'username': request.user.username, 'first_name': request.user.first_name, 'last_name': request.user.last_name, 'phone': request.user.phone}})
+    context.update({'message': "User Details Fetched Successfully", 'userDetails': {'id': request.user.id, 'email': request.user.email,
+                   'username': request.user.username, 'first_name': request.user.first_name, 'last_name': request.user.last_name, 'phone': request.user.phone}})
     return Response(context)
 
 
@@ -60,7 +62,10 @@ def remove_html_tags(text):
 
 
 def split_by_special_characters_and_space(input_string):
-    input_string = input_string.replace("_", " ").replace("'", "").replace('"', '')
+    input_string = input_string.replace("_", " ")
+    input_string = input_string.replace("'", "")
+    input_string = input_string.replace('"', '')
+    input_string = input_string.replace(', ', ' ')
     splitted = re.findall(r"[\w']+", input_string)
     return splitted
 
@@ -68,7 +73,8 @@ def split_by_special_characters_and_space(input_string):
 def getResponse(request):
     if request.method == "POST":
         question = request.POST['question']
-        result = list(models.QuestionAnswers.objects.filter(question__icontains=question).values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
+        result = list(models.QuestionAnswers.objects.filter(question__icontains=question).values(
+            'question', 'response', 'category', 'order', 'parent__question', 'parent__response'))
         if len(result) > 0:
             return JsonResponse({
                 'code': 200,
@@ -86,8 +92,10 @@ def getResponse(request):
             # Loop through all objects and count the matching words
             for obj in models.QuestionAnswers.objects.all().values('question', 'response', 'category', 'order', 'parent__question', 'parent__response'):
                 # obj_words = obj['question'].split()
-                obj_words = split_by_special_characters_and_space(obj['question'])
-                match_count = sum(1 for word in search_words if word in obj_words)
+                obj_words = split_by_special_characters_and_space(
+                    obj['question'])
+                match_count = sum(
+                    1 for word in search_words if word in obj_words)
 
                 if match_count > max_match_count:
                     max_match_count = match_count
@@ -120,7 +128,8 @@ def getResponse(request):
                 result = nlp(question=question, context=paragraph)
                 print(result)
                 if (result['score'] < 0.03):
-                    responseText = random.choice(["Sorry I don't understand your query.", "Sorry! I can't find any relatable answers for your query."])
+                    responseText = random.choice(
+                        ["Sorry I don't understand your query.", "Sorry! I can't find any relatable answers for your query."])
                     return JsonResponse({
                         'code': 200,
                         'status': "SUCCESS",
@@ -138,8 +147,8 @@ def getResponse(request):
             'status': "ERROR",
             'message': "There should be ajax method."
         })
-    
-    
+
+
 def test_cors_view(request):
     data = {'message': 'CORS test successful!'}
     response = JsonResponse(data)
