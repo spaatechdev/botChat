@@ -124,12 +124,11 @@ def getResponse(request):
                     # for word in search_words:
                     #     if word in obj_words:
                     #         match_count += 1
-                    if obj['match_count'] > 1:
-                        if obj['match_count'] > max_match_count:
-                            max_match_count = obj['match_count']
-                            result = [obj]
-                        elif obj['match_count'] == max_match_count:
-                            result.append(obj)
+                    if obj['match_count'] > max_match_count:
+                        max_match_count = obj['match_count']
+                        result = [obj]
+                    elif obj['match_count'] == max_match_count:
+                        result.append(obj)
                 result = sorted(result, key=itemgetter('match_count'), reverse=True)
                 length=len(result)
                 if length > 3:
